@@ -20,3 +20,14 @@ clean: ## Clean up module
 	@rm -Rf pytest-results.xml
 	@rm -Rf pytest-coverage.txt
 	@rm -Rf .eggs/
+
+##@ AWS
+
+list: ## list
+	@cdk list
+
+synth: ## synthesize
+	@cdk synth
+
+deploy: ## deploy
+	@cdk deploy
