@@ -10,6 +10,12 @@ class Config(BaseSettings):
     # Kinesis
     KINESIS_ARN: str
 
+    # AppConfig
+    APP_CONFIG_NAME: str
+    APP_CONFIG_ENV_NAME: str
+    APP_CONFIG_PROFILE_NAME: str
+    APP_CONFIG_DEPLOYMENT_STRAT_NAME: str
+
     # Lambda
     FUNCTION_NAME: str = "LambdaFunctionKinesis"
     FUNCTION_LOCATION: str = "lambda"
