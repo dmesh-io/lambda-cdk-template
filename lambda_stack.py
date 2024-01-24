@@ -15,6 +15,7 @@ from aws_cdk.aws_lambda import (
     StartingPosition,
 )
 from aws_cdk.aws_lambda_event_sources import KinesisEventSource
+from aws_cdk.aws_secretsmanager import ISecret, Secret
 from config import Config
 from constructs import Construct
 
@@ -24,10 +25,11 @@ class LambdaStack(Stack):
     Creates an AWS Lambda Function (Docker image) with AWS Kinesis Stream as the event source.
 
     A Docker image is built and pushed to a private ECR. If the ECR does not exist, it is automatically created.
+    TODO: -> add 2.nd option to specify an existing docker image in ecr
 
     The AWS Lambda Function uses AWS AppConfig to retrieve application information.
-    For this to work, you need to add the AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
-
+    For this to work, you either need to add the AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
+    OR use boto3 in your application code.
 
     In the context of AWS AppConfig, these actions are performed:
     - Creating an application
@@ -35,6 +37,9 @@ class LambdaStack(Stack):
     - Creating a configuration profile
     - Creating a deployment strategy
     - Deploying the configuration
+
+    The AWS lambda function is given the permission to retrieve provided secrets (ARNs) from the secrets manager.
+
     """
 
     def __init__(self, scope: Construct, id: str, config: Config, **kwargs) -> None:
@@ -99,13 +104,28 @@ class LambdaStack(Stack):
             self, "LambdaRole", assumed_by=ServicePrincipal("lambda.amazonaws.com")
         )
 
+        # allow lambda function SP to retrieve secrets from the secrets manager
+        for secret in self.config.SECRETS:
+            # make sure the secret exists
+            secret_ref: ISecret = Secret.from_secret_complete_arn(
+                self, secret, secret_complete_arn=secret
+            )
+
         lambda_role.add_to_policy(
             statement=PolicyStatement(
                 effect=Effect.ALLOW,
-                actions=["appconfig:GetConfiguration"],
+                actions=["secretsmanager:GetSecretValue"],
+                resources=self.config.SECRETS,
+            )
+        )
+
+        lambda_role.add_to_policy(
+            statement=PolicyStatement(
+                effect=Effect.ALLOW,
+                actions=["appconfig:GetConfiguration", "appconfig:GetApplication"],
                 resources=[
-                    "*"
-                ],  # TODO: restrict access to the app config (requires ARN)
+                    f"arn:aws:appconfig:*:{self.config.ACCOUNT_ID}:application/{self.config.APP_CONFIG_NAME}",
+                ],
             )
         )
 
@@ -131,11 +151,15 @@ class LambdaStack(Stack):
             )
         )
 
-        # TODO: Make the lambda function use app config (add AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html)
+        # TODO: Make the lambda function use app config (use boto3)
 
         # TODO: Test if the lambda can retrieve the app config data
 
         # TODO: Find out how to make the deployment work
+
+        # TODO: Make the lambda function get secrets from the secrets manager
+
+        # TODO: Test if the lambda can retrieve the secrets
 
         # from aws_cdk.aws_appconfig import (
         #     CfnDeployment
@@ -151,13 +175,8 @@ class LambdaStack(Stack):
         #     environment_id=app_env.logical_id,
         # )
 
-        # permission
-        # lambda_function.add_permission # TODO
-        # allow the lambda function to write on the table in postgreSQL database
-        # allow the lambda function to access secrets (always aws secrets manager) -> create manually
+        # PostgreSQL permission
+        # lambda_function.add_permission()
+        # TODO: allow the lambda function to write on the table in postgreSQL database
 
-
-# 2. aws config with permissions
-# 2.5 configure lambda to retrieve app config data
-# 3. aws secrets manager with permissions
-# 4. cookie cutter magic
+        # TODO: cookie cutter magic
