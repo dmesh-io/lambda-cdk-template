@@ -52,8 +52,18 @@ class LambdaStack(Stack):
             )
         )
 
-        # layers
-        # lambda_function.add_layers()
+        # create aws app config
+
 
         # permission
-        # lambda_function.add_permission
+        # lambda_function.add_permission # TODO
+        # allow the lambda function to write on the table in postgreSQL database
+        # allow the lambda function to access secrets (always aws secrets manager) -> create manually
+
+        # TODO: use docker container (no layers required) -> python 3.10 aws runtime
+
+# 1. docker container
+# 2. aws config with permissions
+# 3. aws secrets manager with permissions
+
+# 4. cookie cutter ->
