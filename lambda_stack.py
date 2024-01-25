@@ -164,7 +164,7 @@ class LambdaStack(Stack):
             )
         )
 
-        # TODO: Find out how to make the deployment work
+        # TODO: Add role assignment for kinesis pull
 
         # TODO: Make the lambda function use app config (use boto3)
 
@@ -176,15 +176,15 @@ class LambdaStack(Stack):
 
         from aws_cdk.aws_appconfig import CfnDeployment
 
-        # app_deployment: CfnDeployment = CfnDeployment(
-        #     self,
-        #     "AppDeployment",
-        #     application_id=app_config.attr_application_id,
-        #     configuration_profile_id=app_profile.attr_configuration_profile_id,
-        #     configuration_version=hosted_configuration_version.logical_id,
-        #     deployment_strategy_id=app_deployment_strategy.logical_id,
-        #     environment_id=app_env.logical_id,
-        # )
+        app_deployment: CfnDeployment = CfnDeployment(
+            self,
+            "AppDeployment",
+            application_id=app_config.attr_application_id,
+            configuration_profile_id=app_profile.attr_configuration_profile_id,
+            configuration_version=hosted_configuration_version.ref,
+            deployment_strategy_id=app_deployment_strategy.ref,
+            environment_id=app_env.ref,
+        )
         # PostgreSQL permission
         # lambda_function.add_permission()
         # TODO: allow the lambda function to write on the table in postgreSQL database
