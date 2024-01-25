@@ -1,3 +1,5 @@
+import json
+
 from aws_cdk import Duration, Stack
 from aws_cdk.aws_appconfig import (
     CfnApplication,
@@ -84,13 +86,15 @@ class LambdaStack(Stack):
             name=self.config.APP_CONFIG_DEPLOYMENT_STRAT_NAME,
         )
 
-        hosted_configuration_version: CfnHostedConfigurationVersion = CfnHostedConfigurationVersion(
-            self,
-            "HostedConfiguration",
-            application_id=app_config.attr_application_id,
-            configuration_profile_id=app_profile.attr_configuration_profile_id,
-            content="abc",
-            content_type="text/plain",  # TODO: use json as an alternative (configuration1)
+        hosted_configuration_version: CfnHostedConfigurationVersion = (
+            CfnHostedConfigurationVersion(
+                self,
+                "HostedConfiguration",
+                application_id=app_config.attr_application_id,
+                configuration_profile_id=app_profile.attr_configuration_profile_id,
+                content=json.dumps({"key": "value"}),
+                content_type="application/json",
+            )
         )
 
         # get kinesis reference
@@ -181,9 +185,7 @@ class LambdaStack(Stack):
         #     deployment_strategy_id=app_deployment_strategy.logical_id,
         #     environment_id=app_env.logical_id,
         # )
-
         # PostgreSQL permission
         # lambda_function.add_permission()
         # TODO: allow the lambda function to write on the table in postgreSQL database
-
         # TODO: cookie cutter magic
