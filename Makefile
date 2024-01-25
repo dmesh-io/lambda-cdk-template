@@ -47,11 +47,11 @@ test: ## test
 	@curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
 
 tag: ## tag
-	@docker tag docker-image:test-aws 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest
+	@docker tag docker-image:test-aws 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest1
 
 login: ## login to ecr (private)
 	@aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 642938752675.dkr.ecr.eu-central-1.amazonaws.com
 
 push: ## push
-	@docker push 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest
+	@docker push 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest1
 

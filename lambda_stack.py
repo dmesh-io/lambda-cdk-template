@@ -147,9 +147,14 @@ class LambdaStack(Stack):
         lambda_role.add_to_policy(
             statement=PolicyStatement(
                 effect=Effect.ALLOW,
-                actions=["appconfig:GetConfiguration", "appconfig:GetApplication"],
+                actions=[
+                    "appconfig:GetConfiguration",
+                    "appconfig:GetApplication",
+                    "appconfig:GetLatestConfiguration",
+                    "appconfig:StartConfigurationSession",
+                ],
                 resources=[
-                    f"arn:aws:appconfig:*:{self.config.ACCOUNT_ID}:application/{self.config.APP_CONFIG_NAME}",
+                    f"arn:aws:appconfig:*:{self.config.ACCOUNT_ID}:application/*",
                 ],
             )
         )
@@ -178,9 +183,7 @@ class LambdaStack(Stack):
             statement=PolicyStatement(
                 effect=Effect.ALLOW,
                 actions=["kinesis:PutRecord", "kinesis:PutRecords"],
-                resources=[
-                    self.config.KINESIS_ARN_OUTPUT
-                ],
+                resources=[self.config.KINESIS_ARN_OUTPUT],
             )
         )
 
@@ -216,11 +219,7 @@ class LambdaStack(Stack):
             )
         )
 
-        # TODO: Make the lambda function use app config (use boto3)
-
-        # TODO: Test if the lambda can retrieve the app config data
-
-        # TODO: better solution for tags
+        # TODO: better solution for tags (julia)
 
         app_deployment: CfnDeployment = CfnDeployment(
             self,
