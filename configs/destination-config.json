@@ -1,0 +1,5 @@
+{
+  "type": "kinesis",
+  "region_name": "eu-north-1",
+  "stream_name": "patrick-kinesis-processing"
+}

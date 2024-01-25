@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+from typing import List
 
 from aws_cdk import Duration, Stack
 from aws_cdk.aws_appconfig import (
@@ -22,6 +24,21 @@ from aws_cdk.aws_lambda_event_sources import KinesisEventSource
 from aws_cdk.aws_secretsmanager import ISecret, Secret
 from config import Config
 from constructs import Construct
+
+
+def get_filenames_of_path(path: Path, ext: str = "*") -> List[Path]:
+    """
+    Returns a list of files in a directory/path. Uses pathlib.
+    """
+    filenames = [file for file in path.glob(ext) if file.is_file()]
+    assert len(filenames) > 0, f"No files found in path: {path}"
+    return filenames
+
+
+def read_json_config(path: Path):
+    with open(path, "r") as fh:
+        data: dict = json.load(fh)
+        return data
 
 
 class LambdaStack(Stack):
@@ -74,14 +91,6 @@ class LambdaStack(Stack):
 
         environment["app_config_environment_name"] = app_env.name
 
-        app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
-            self,
-            "Profile",
-            application_id=app_config.attr_application_id,
-            name=self.config.APP_CONFIG_PROFILE_NAME,
-            location_uri="hosted",
-        )
-
         app_deployment_strategy: CfnDeploymentStrategy = CfnDeploymentStrategy(
             self,
             "DeploymentStrategy",
@@ -91,16 +100,44 @@ class LambdaStack(Stack):
             name=self.config.APP_CONFIG_DEPLOYMENT_STRAT_NAME,
         )
 
-        hosted_configuration_version: CfnHostedConfigurationVersion = (
-            CfnHostedConfigurationVersion(
+        destination_path: Path = (
+            Path(self.config.CONFIG_PATH) / "destination-config.json"
+        )
+
+        paths: List[Path] = get_filenames_of_path(
+            path=Path(self.config.CONFIG_PATH) / "schemas", ext="*.json"
+        ) + [destination_path]
+
+        for path in paths:
+            json_data: dict = read_json_config(path)
+
+            app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
                 self,
-                "HostedConfiguration",
+                f"Profile-{path.stem}",
+                application_id=app_config.attr_application_id,
+                name=path.stem,
+                location_uri="hosted",
+            )
+
+            hosted_configuration_version: CfnHostedConfigurationVersion = (
+                CfnHostedConfigurationVersion(
+                    self,
+                    path.stem,
+                    application_id=app_config.attr_application_id,
+                    configuration_profile_id=app_profile.attr_configuration_profile_id,
+                    content=json.dumps(json_data),
+                    content_type="application/json",
+                )
+            )
+            app_deployment: CfnDeployment = CfnDeployment(
+                self,
+                f"AppDeployment-{path.stem}",
                 application_id=app_config.attr_application_id,
                 configuration_profile_id=app_profile.attr_configuration_profile_id,
-                content=json.dumps({"key": "value"}),
-                content_type="application/json",
+                configuration_version=hosted_configuration_version.ref,
+                deployment_strategy_id=app_deployment_strategy.ref,
+                environment_id=app_env.ref,
             )
-        )
 
         # get kinesis reference
         kinesis: IStream = Stream.from_stream_arn(
@@ -221,15 +258,6 @@ class LambdaStack(Stack):
 
         # TODO: better solution for tags (julia)
 
-        app_deployment: CfnDeployment = CfnDeployment(
-            self,
-            "AppDeployment",
-            application_id=app_config.attr_application_id,
-            configuration_profile_id=app_profile.attr_configuration_profile_id,
-            configuration_version=hosted_configuration_version.ref,
-            deployment_strategy_id=app_deployment_strategy.ref,
-            environment_id=app_env.ref,
-        )
         # PostgreSQL permission
         # lambda_function.add_permission()
         # TODO: allow the lambda function to write on the table in postgreSQL database

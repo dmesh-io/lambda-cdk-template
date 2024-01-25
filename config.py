@@ -7,6 +7,9 @@ class Config(BaseSettings):
     ACCOUNT_ID: str
     REGION: str
 
+    # CONFIGS
+    CONFIG_PATH: str
+
     # Kinesis
     KINESIS_ARN_INPUT: str
     KINESIS_ARN_OUTPUT: str
@@ -14,7 +17,6 @@ class Config(BaseSettings):
     # AppConfig
     APP_CONFIG_NAME: str
     APP_CONFIG_ENV_NAME: str
-    APP_CONFIG_PROFILE_NAME: str
     APP_CONFIG_DEPLOYMENT_STRAT_NAME: str
 
     # SECRETS
