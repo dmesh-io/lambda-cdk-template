@@ -27,3 +27,7 @@ class Config(BaseSettings):
     FUNCTION_TIMEOUT: int = 60  # in seconds
     FUNCTION_VPC: Optional[str] = None
     FUNCTION_ENV: Optional[dict] = None
+
+    # Docker
+    DOCKER_IMAGE_REPO: Optional[str] = None
+    DOCKER_IMAGE_TAG: Optional[str] = None

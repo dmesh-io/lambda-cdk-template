@@ -6,6 +6,7 @@ from aws_cdk.aws_appconfig import (
     CfnEnvironment,
     CfnHostedConfigurationVersion,
 )
+from aws_cdk.aws_ecr import Repository
 from aws_cdk.aws_iam import Effect, PolicyStatement, Role, ServicePrincipal
 from aws_cdk.aws_kinesis import IStream, Stream
 from aws_cdk.aws_lambda import (
@@ -25,7 +26,7 @@ class LambdaStack(Stack):
     Creates an AWS Lambda Function (Docker image) with AWS Kinesis Stream as the event source.
 
     A Docker image is built and pushed to a private ECR. If the ECR does not exist, it is automatically created.
-    TODO: -> add 2.nd option to specify an existing docker image in ecr
+    If a ECR image is given in the config this will be used otherwise the local Dockerfile is used as the image
 
     The AWS Lambda Function uses AWS AppConfig to retrieve application information.
     For this to work, you either need to add the AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
@@ -77,21 +78,19 @@ class LambdaStack(Stack):
         app_deployment_strategy: CfnDeploymentStrategy = CfnDeploymentStrategy(
             self,
             "DeploymentStrategy",
-            deployment_duration_in_minutes=1,
+            deployment_duration_in_minutes=0,
             growth_factor=1.0,
             replicate_to="NONE",
             name=self.config.APP_CONFIG_DEPLOYMENT_STRAT_NAME,
         )
 
-        hosted_configuration_version: CfnHostedConfigurationVersion = (
-            CfnHostedConfigurationVersion(
-                self,
-                "HostedConfiguration",
-                application_id=app_config.attr_application_id,
-                configuration_profile_id=app_profile.attr_configuration_profile_id,
-                content="abc",
-                content_type="text/plain",  # use json as an alternative
-            )
+        hosted_configuration_version: CfnHostedConfigurationVersion = CfnHostedConfigurationVersion(
+            self,
+            "HostedConfiguration",
+            application_id=app_config.attr_application_id,
+            configuration_profile_id=app_profile.attr_configuration_profile_id,
+            content="abc",
+            content_type="text/plain",  # TODO: use json as an alternative (configuration1)
         )
 
         # get kinesis reference
@@ -129,12 +128,22 @@ class LambdaStack(Stack):
             )
         )
 
+        if self.config.DOCKER_IMAGE_TAG and self.config.DOCKER_IMAGE_TAG:
+            code: DockerImageCode = DockerImageCode.from_ecr(
+                repository=Repository.from_repository_name(
+                    self, "Repository", repository_name=self.config.DOCKER_IMAGE_REPO
+                ),
+                tag_or_digest=self.config.DOCKER_IMAGE_TAG,
+            )
+        else:
+            code: DockerImageCode = DockerImageCode.from_image_asset(directory=".")
+
         # create lambda function with docker
         lambda_function: DockerImageFunction = DockerImageFunction(
             self,
             "LambdaFunction",
             function_name=self.config.FUNCTION_NAME,
-            code=DockerImageCode.from_image_asset(directory="."),
+            code=code,
             architecture=Architecture.X86_64,
             description=self.config.FUNCTION_DESCRIPTION,
             memory_size=self.config.FUNCTION_MEMORY_SIZE,
@@ -151,20 +160,18 @@ class LambdaStack(Stack):
             )
         )
 
+        # TODO: Find out how to make the deployment work
+
         # TODO: Make the lambda function use app config (use boto3)
 
         # TODO: Test if the lambda can retrieve the app config data
-
-        # TODO: Find out how to make the deployment work
 
         # TODO: Make the lambda function get secrets from the secrets manager
 
         # TODO: Test if the lambda can retrieve the secrets
 
-        # from aws_cdk.aws_appconfig import (
-        #     CfnDeployment
-        # )
-        #
+        from aws_cdk.aws_appconfig import CfnDeployment
+
         # app_deployment: CfnDeployment = CfnDeployment(
         #     self,
         #     "AppDeployment",
