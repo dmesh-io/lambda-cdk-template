@@ -135,6 +135,13 @@ class LambdaStack(Stack):
                 resources=self.config.SECRETS,
             )
         )
+        lambda_role.add_to_policy(
+            statement=PolicyStatement(
+                effect=Effect.ALLOW,
+                actions=["secretsmanager:GetSecretValue"],
+                resources=[self.config.SECRET_POSTGRESQL],
+            )
+        )
 
         lambda_role.add_to_policy(
             statement=PolicyStatement(
@@ -201,10 +208,6 @@ class LambdaStack(Stack):
         # TODO: Make the lambda function use app config (use boto3)
 
         # TODO: Test if the lambda can retrieve the app config data
-
-        # TODO: Make the lambda function get secrets from the secrets manager
-
-        # TODO: Test if the lambda can retrieve the secrets
 
         app_deployment: CfnDeployment = CfnDeployment(
             self,
