@@ -18,6 +18,7 @@ class Config(BaseSettings):
 
     # SECRETS
     SECRETS: List[str]
+    SECRET_POSTGRESQL: str
 
     # Lambda
     FUNCTION_NAME: str = "LambdaFunctionKinesis"

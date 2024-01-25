@@ -63,12 +63,16 @@ class LambdaStack(Stack):
             self, "ApplicationConfig", name=self.config.APP_CONFIG_NAME
         )
 
+        environment["app_config_app_name"] = app_config.name
+
         app_env: CfnEnvironment = CfnEnvironment(
             self,
             "Environment",
             application_id=app_config.attr_application_id,
             name=self.config.APP_CONFIG_ENV_NAME,
         )
+
+        environment["app_config_environment_name"] = app_env.name
 
         app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
             self,
@@ -114,6 +118,15 @@ class LambdaStack(Stack):
             secret_ref: ISecret = Secret.from_secret_complete_arn(
                 self, secret, secret_complete_arn=secret
             )
+
+        # make sure the secret exists
+        secret_postgresql_ref: ISecret = Secret.from_secret_complete_arn(
+            self,
+            self.config.SECRET_POSTGRESQL,
+            secret_complete_arn=self.config.SECRET_POSTGRESQL,
+        )
+
+        environment["postgres_secret_arn"] = self.config.SECRET_POSTGRESQL
 
         lambda_role.add_to_policy(
             statement=PolicyStatement(
@@ -184,8 +197,6 @@ class LambdaStack(Stack):
                 stream=kinesis, starting_position=StartingPosition.LATEST
             )
         )
-
-        # TODO: Add role assignment for kinesis pull
 
         # TODO: Make the lambda function use app config (use boto3)
 
