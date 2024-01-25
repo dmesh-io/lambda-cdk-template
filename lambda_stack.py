@@ -29,7 +29,7 @@ class LambdaStack(Stack):
     Creates an AWS Lambda Function (Docker image) with AWS Kinesis Stream as the event source.
 
     A Docker image is built and pushed to a private ECR. If the ECR does not exist, it is automatically created.
-    If a ECR image is given in the config this will be used otherwise the local Dockerfile is used as the image
+    If an ECR image is given in the config this will be used otherwise the local Dockerfile is used as the image
 
     The AWS Lambda Function uses AWS AppConfig to retrieve application information.
     For this to work, you either need to add the AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
@@ -104,7 +104,7 @@ class LambdaStack(Stack):
 
         # get kinesis reference
         kinesis: IStream = Stream.from_stream_arn(
-            self, "KinesisEventSource", stream_arn=self.config.KINESIS_ARN
+            self, "KinesisEventSource", stream_arn=self.config.KINESIS_ARN_INPUT
         )
 
         # create new role for the lambda function
@@ -127,6 +127,7 @@ class LambdaStack(Stack):
         )
 
         environment["postgres_secret_arn"] = self.config.SECRET_POSTGRESQL
+        environment["kinesis_arn_output"] = self.config.KINESIS_ARN_OUTPUT
 
         lambda_role.add_to_policy(
             statement=PolicyStatement(
@@ -173,6 +174,16 @@ class LambdaStack(Stack):
             )
         )
 
+        lambda_role.add_to_policy(
+            statement=PolicyStatement(
+                effect=Effect.ALLOW,
+                actions=["kinesis:PutRecord", "kinesis:PutRecords"],
+                resources=[
+                    self.config.KINESIS_ARN_OUTPUT
+                ],
+            )
+        )
+
         if self.config.DOCKER_IMAGE_TAG and self.config.DOCKER_IMAGE_TAG:
             code: DockerImageCode = DockerImageCode.from_ecr(
                 repository=Repository.from_repository_name(
@@ -208,6 +219,8 @@ class LambdaStack(Stack):
         # TODO: Make the lambda function use app config (use boto3)
 
         # TODO: Test if the lambda can retrieve the app config data
+
+        # TODO: better solution for tags
 
         app_deployment: CfnDeployment = CfnDeployment(
             self,

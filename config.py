@@ -8,7 +8,8 @@ class Config(BaseSettings):
     REGION: str
 
     # Kinesis
-    KINESIS_ARN: str
+    KINESIS_ARN_INPUT: str
+    KINESIS_ARN_OUTPUT: str
 
     # AppConfig
     APP_CONFIG_NAME: str

@@ -10,4 +10,7 @@ def handler(event, context):
     print(response)
     logging.info(response)
     logging.info(event)
+    # write to kinesis stream
+    kinesis_client = boto3.client('kinesis')
+    kinesis_client.put_record(Data=b'some value', PartitionKey='1', StreamARN=os.getenv("kinesis_arn_output"))
     return "my return value"
