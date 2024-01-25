@@ -4,6 +4,7 @@ from aws_cdk import Duration, Stack
 from aws_cdk.aws_appconfig import (
     CfnApplication,
     CfnConfigurationProfile,
+    CfnDeployment,
     CfnDeploymentStrategy,
     CfnEnvironment,
     CfnHostedConfigurationVersion,
@@ -132,6 +133,26 @@ class LambdaStack(Stack):
             )
         )
 
+        lambda_role.add_to_policy(
+            statement=PolicyStatement(
+                effect=Effect.ALLOW,
+                actions=["logs:CreateLogGroup"],
+                resources=[
+                    f"arn:aws:logs:{self.config.REGION}:{self.config.ACCOUNT_ID}:*"
+                ],
+            )
+        )
+
+        lambda_role.add_to_policy(
+            statement=PolicyStatement(
+                effect=Effect.ALLOW,
+                actions=["logs:CreateLogStream", "logs:PutLogEvents"],
+                resources=[
+                    f"arn:aws:logs:{self.config.REGION}:{self.config.ACCOUNT_ID}:log-group:/aws/lambda/{self.config.FUNCTION_NAME}"
+                ],
+            )
+        )
+
         if self.config.DOCKER_IMAGE_TAG and self.config.DOCKER_IMAGE_TAG:
             code: DockerImageCode = DockerImageCode.from_ecr(
                 repository=Repository.from_repository_name(
@@ -173,8 +194,6 @@ class LambdaStack(Stack):
         # TODO: Make the lambda function get secrets from the secrets manager
 
         # TODO: Test if the lambda can retrieve the secrets
-
-        from aws_cdk.aws_appconfig import CfnDeployment
 
         app_deployment: CfnDeployment = CfnDeployment(
             self,

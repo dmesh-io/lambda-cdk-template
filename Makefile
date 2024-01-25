@@ -32,6 +32,9 @@ synth: ## synthesize
 deploy: ## deploy
 	@cdk deploy
 
+invoke-kinesis: ## send a sample test kinesis stream event
+	@aws kinesis put-record --stream-name kinesis-johannes-stream --partition-key 123 --data "SGVsbG8="
+
 ##@ Docker
 
 build: ## build
@@ -50,5 +53,5 @@ login: ## login to ecr (private)
 	@aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 642938752675.dkr.ecr.eu-central-1.amazonaws.com
 
 push: ## push
-	@docker push 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private
+	@docker push 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest
 
