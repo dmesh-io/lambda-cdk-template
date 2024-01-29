@@ -1,7 +1,10 @@
 {
+  "project_slug": {
+    "prompt": "Enter the project name:",
+    "required": true
+  },
   "ACCOUNT_ID": {
-    "prompt": "Enter the AWS AccountId",
-    "default": "",
+    "prompt": "Enter the AWS AccountId:",
     "required": true
   }
 }
