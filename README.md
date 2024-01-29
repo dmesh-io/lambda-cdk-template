@@ -27,19 +27,53 @@ You must provide a config path that contains this directory structure:
 
 ### input.json
 
-...
+The `input.json` must contain the keys: `type` and `arn`.
+All other fields are **type-specific**.
+
+```json
+{
+  "type": "OutputType",
+  "arn": "arn"
+}
+```
 
 ### output.json
 
-...
+The `output.json` must contain the keys: `type` and `arn`.
+All other fields are **type-specific**.
+
+```json
+{
+  "type": "OutputType",
+  "arn": "arn"
+}
+```
+
+TODO: add type-specific fields
 
 ### secrets.json
 
-...
+Every `key` must match with a name in AWS Secrets Manager.
+The value is the `arn` of the secret.
+
+```json
+{
+  "key": "arn"
+}
+```
 
 ### transform.json
 
-...
+Every `key` must match with a name (stem) in the `configs/schemas` directory.
+The value must be a JSON string.
+
+```json
+{
+  "schema-v1": [
+    "{'id': 'id', 'fullname': 'name'}"
+  ]
+}
+```
 
 ## How to use
 
