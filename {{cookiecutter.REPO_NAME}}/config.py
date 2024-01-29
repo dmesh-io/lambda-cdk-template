@@ -55,16 +55,14 @@ class Config(BaseSettings):
 
     # Lambda
     FUNCTION_NAME: str = "LambdaFunctionKinesis"
-    FUNCTION_LOCATION: str = "lambda"
-    FUNCTION_DESCRIPTION: str = "Lambda Function Kinesis"
+    FUNCTION_DESCRIPTION: str = "Lambda Function description"
     FUNCTION_MEMORY_SIZE: int = 128  # in MB
     FUNCTION_TIMEOUT: int = 60  # in seconds
     FUNCTION_VPC: Optional[str] = None
     FUNCTION_ENV: Optional[dict] = None
 
     # Docker (optional)
-    DOCKER_IMAGE_REPO: Optional[str] = None
-    DOCKER_IMAGE_TAG: Optional[str] = None
+    DOCKER_IMAGE: str = "local"
 
     @cached_property
     def input_config_path(self) -> Path:
@@ -73,6 +71,10 @@ class Config(BaseSettings):
     @cached_property
     def output_config_path(self) -> Path:
         return Path(self.CONFIG_PATH) / "output.json"
+
+    @cached_property
+    def secrets_config_path(self) -> Path:
+        return Path(self.CONFIG_PATH) / "secret"
 
     @cached_property
     def input_config_data(self) -> dict:
@@ -86,10 +88,19 @@ class Config(BaseSettings):
         self.validate_output_config_data()
         return data
 
+    @cached_property
+    def secrets_config_data(self) -> dict:
+        data: dict = read_json_config(self.secrets_config_path)
+        self.validate_output_config_data()
+        return data
+
     def validate_output_config_data(self):
         ...
 
     def validate_input_config_data(self):
+        ...
+
+    def validate_secrets_config_data(self):
         ...
 
     @cached_property

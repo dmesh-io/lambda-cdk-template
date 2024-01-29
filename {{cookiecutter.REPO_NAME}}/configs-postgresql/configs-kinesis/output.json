@@ -6,8 +6,7 @@
       "host": "localhost",
       "port": 5432,
       "database": "testdatabase",
-      "user": "postgres",
-      "secret_arn": "arn:aws:secretsmanager:eu-central-1:642938752675:secret:mysupersecret-fH2ul2"
+      "user": "postgres"
     },
     "postgres_table_name": "persons"
   }

@@ -122,9 +122,10 @@ class LambdaStack(Stack):
         )
 
         paths: List[Path] = (
-            self.config.schema_paths
-            + [self.config.input_config_path]
-            + [self.config.output_config_path]
+                self.config.schema_paths
+                + [self.config.input_config_path]
+                + [self.config.output_config_path]
+                + [self.config.secrets_config_path]
         )
 
         for path in paths:
@@ -160,27 +161,29 @@ class LambdaStack(Stack):
             )
 
         # allow lambda function SP to retrieve secrets from the secrets manager
-        for secret in self.config.SECRETS:
+        for secret_name, secret_arn in self.config.secrets_config_data:
             # make sure the secret exists
             secret_ref: ISecret = Secret.from_secret_complete_arn(
-                self, secret, secret_complete_arn=secret
+                self, secret_name, secret_complete_arn=secret_arn
             )
 
-        lambda_role.add_to_policy(
-            statement=PolicyStatement(
-                effect=Effect.ALLOW,
-                actions=["secretsmanager:GetSecretValue"],
-                resources=self.config.SECRETS,
+            lambda_role.add_to_policy(
+                statement=PolicyStatement(
+                    effect=Effect.ALLOW,
+                    actions=["secretsmanager:GetSecretValue"],
+                    resources=[secret_arn],
+                )
             )
-        )
 
         # Docker
-        if self.config.DOCKER_IMAGE_REPO and self.config.DOCKER_IMAGE_TAG:
+        if self.config.DOCKER_IMAGE != "local":
+            docker_image_repo, docker_image_tag = self.config.DOCKER_IMAGE.split(":")
+
             code: DockerImageCode = DockerImageCode.from_ecr(
                 repository=Repository.from_repository_name(
-                    self, "Repository", repository_name=self.config.DOCKER_IMAGE_REPO
+                    self, "Repository", repository_name=docker_image_repo
                 ),
-                tag_or_digest=self.config.DOCKER_IMAGE_TAG,
+                tag_or_digest=docker_image_tag,
             )
         else:
             code: DockerImageCode = DockerImageCode.from_image_asset(directory=".")
@@ -193,6 +196,7 @@ class LambdaStack(Stack):
         environment["app_config_environment_name"] = app_env.name
         environment["app_config_profile_input"] = "input"
         environment["app_config_profile_output"] = "output"
+        environment["app_config_secrets"] = "secrets"
 
         # create lambda function with docker image
         lambda_function: DockerImageFunction = DockerImageFunction(
@@ -243,7 +247,5 @@ class LambdaStack(Stack):
                 )
             )
         elif self.config.OUTPUT_TYPE == OutputType.POSTGRESQL:
+            # TODO: implement postgresql
             ...
-
-        # TODO: better solution for tags (julia)
-        # TODO: cookie cutter magic
