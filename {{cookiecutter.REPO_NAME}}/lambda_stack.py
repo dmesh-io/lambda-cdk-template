@@ -198,6 +198,7 @@ class LambdaStack(Stack):
         environment["app_config_profile_input"] = "input"
         environment["app_config_profile_output"] = "output"
         environment["app_config_secrets"] = "secrets"
+        environment["app_config_transform"] = "transform"
 
         # create lambda function with docker image
         lambda_function: DockerImageFunction = DockerImageFunction(
