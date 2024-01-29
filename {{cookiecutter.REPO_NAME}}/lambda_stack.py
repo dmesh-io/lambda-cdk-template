@@ -126,6 +126,7 @@ class LambdaStack(Stack):
                 + [self.config.input_config_path]
                 + [self.config.output_config_path]
                 + [self.config.secrets_config_path]
+                + [self.config.transform_config_path]
         )
 
         for path in paths:

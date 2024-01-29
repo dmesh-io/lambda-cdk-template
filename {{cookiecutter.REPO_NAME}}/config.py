@@ -74,7 +74,11 @@ class Config(BaseSettings):
 
     @cached_property
     def secrets_config_path(self) -> Path:
-        return Path(self.CONFIG_PATH) / "secret"
+        return Path(self.CONFIG_PATH) / "secret.json"
+
+    @cached_property
+    def transform_config_path(self) -> Path:
+        return Path(self.CONFIG_PATH) / "transform.json"
 
     @cached_property
     def input_config_data(self) -> dict:
@@ -94,6 +98,12 @@ class Config(BaseSettings):
         self.validate_output_config_data()
         return data
 
+    @cached_property
+    def transform_config_data(self) -> dict:
+        data: dict = read_json_config(self.transform_config_path)
+        self.validate_transform_config_data()
+        return data
+
     def validate_output_config_data(self):
         ...
 
@@ -101,6 +111,9 @@ class Config(BaseSettings):
         ...
 
     def validate_secrets_config_data(self):
+        ...
+
+    def validate_transform_config_data(self):
         ...
 
     @cached_property

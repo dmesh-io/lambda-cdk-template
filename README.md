@@ -21,6 +21,7 @@ You must provide a config path that contains this directory structure:
 │       ├── ...
 ├── input.json
 ├── output.json
+├── transform.json
 └── secrets.json
 ```
 
@@ -33,6 +34,10 @@ You must provide a config path that contains this directory structure:
 ...
 
 ### secrets.json
+
+...
+
+### transform.json
 
 ...
 
