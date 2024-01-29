@@ -1,0 +1,4 @@
+{
+  "type": "kinesis",
+  "arn": "arn:aws:kinesis:eu-central-1:642938752675:stream/outputStream"
+}
