@@ -1,0 +1,8 @@
+{
+  "schema-v1": [
+    "{'id': 'id', 'fullname': 'name'}"
+  ],
+  "schema-v2": [
+    "{'id': 'id', 'fullname': 'fullName', 'street': address.street, 'city': address.city}"
+  ]
+}
