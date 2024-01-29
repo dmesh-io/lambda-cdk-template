@@ -1,0 +1,7 @@
+{
+  "ACCOUNT_ID": {
+    "prompt": "Enter the AWS AccountId",
+    "default": "",
+    "required": true
+  }
+}
