@@ -162,7 +162,7 @@ class LambdaStack(Stack):
             )
 
         # allow lambda function SP to retrieve secrets from the secrets manager
-        for secret_name, secret_arn in self.config.secrets_config_data:
+        for secret_name, secret_arn in self.config.secrets_config_data.items():
             # make sure the secret exists
             secret_ref: ISecret = Secret.from_secret_complete_arn(
                 self, secret_name, secret_complete_arn=secret_arn

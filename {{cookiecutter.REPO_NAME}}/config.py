@@ -48,10 +48,7 @@ class Config(BaseSettings):
     # AppConfig
     APP_CONFIG_NAME: str
     APP_CONFIG_ENV_NAME: str
-    APP_CONFIG_DEPLOYMENT_STRATEGY_NAME: str
-
-    # Secrets
-    SECRETS: List[str]
+    APP_CONFIG_DEPLOYMENT_STRATEGY_NAME: str = "DeploymentStrategy"
 
     # Lambda
     FUNCTION_NAME: str = "LambdaFunctionKinesis"
@@ -74,7 +71,7 @@ class Config(BaseSettings):
 
     @cached_property
     def secrets_config_path(self) -> Path:
-        return Path(self.CONFIG_PATH) / "secret.json"
+        return Path(self.CONFIG_PATH) / "secrets.json"
 
     @cached_property
     def transform_config_path(self) -> Path:
