@@ -26,7 +26,7 @@
     "INPUT_TYPE": "Specify your input type",
     "OUTPUT_TYPE": "Specify your output type",
     "CONFIG_PATH": "Enter the location of your configs directory (/schemas, input.json, output.json, transform.json, secrets.json)",
-    "DOCKER_IMAGE": "Enter the Docker Image to be used for the AWS Lambda Function (enter 'local' if you wish to build & push a minimal example)",
+    "DOCKER_IMAGE": "Enter the Docker Image (repo name with tag, e.g. 'test-repo:latest') to be used for the AWS Lambda Function (enter 'local' if you wish to build & push a minimal example)",
     "APP_CONFIG_NAME": "Enter a name for the AWS AppConfig",
     "APP_CONFIG_ENV_NAME": "Enter a name for the AWS AppConfig Environment",
     "FUNCTION_NAME": "Enter a name for the AWS Lambda Function",
