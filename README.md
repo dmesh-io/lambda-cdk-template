@@ -63,8 +63,8 @@ All other fields are **type-specific**.
 
 Available types:
 
-- `kinesis`
-- `postgresql`
+- `kinesis` - [/configs-kinesis/output.json](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Fconfigs-kinesis%2Foutput.json)
+- `postgresql` - [/configs-postgresql/output.json](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Fconfigs-postgresql%2Fconfigs-kinesis%2Foutput.json)
 
 ### secrets.json (optional)
 

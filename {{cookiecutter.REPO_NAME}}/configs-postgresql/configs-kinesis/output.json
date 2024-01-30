@@ -1,6 +1,6 @@
 {
   "type": "postgresql",
-  "arn": "arn:aws:rds:eu-central-1:642938752675:db:testdatabase",
+  "arn": "You can leave this empty for the postgresql type",
   "config": {
     "engine_config": {
       "host": "localhost",
