@@ -36,6 +36,10 @@ def validate_docker_image() -> True:
         raise ValueError("Incorrect value for 'DOCKER_IMAGE'. Missing ':' character!")
 
 
+def copy_configs_dir(src: str, dst: str) -> None:
+    shutil.copytree(src, dst)
+
+
 if __name__ == "__main__":
     validate_account_id()
     validate_configs()
@@ -45,5 +49,6 @@ if __name__ == "__main__":
         remove_dir("lambda")
         remove_file("Dockerfile")
 
-    if "{{cookiecutter.CONFIG_PATH}}" != "create":
+    if "{{cookiecutter.CONFIG_PATH}}" != "empty":
         remove_dir("configs")
+        copy_configs_dir(src="{{cookiecutter.CONFIG_PATH}}", dst="./configs")
