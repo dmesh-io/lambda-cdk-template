@@ -144,7 +144,18 @@ OR do this in one step:
 cookiecutter git@github.com:dmesh-io/lambda-cdk-template.git
 ```
 
+### Cookicutter
+
 ![cookiecutter.gif](cookiecutter.gif)
+
+### Set-up & Deployment
+
+![how-to.gif](how-to.gif)
+
+### Result in AWS
+
+![aws-result.gif](aws-result.gif)
+![aws-result2.gif](aws-result2.gif)
 
 ## TODO:
 
