@@ -63,7 +63,9 @@ class LambdaStack(Stack):
     def _build(self) -> None:
         # create new role for the lambda function
         lambda_role: Role = Role(
-            self, f"LambdaRole{self.config.APP_CONFIG_ENV_NAME}", assumed_by=ServicePrincipal("lambda.amazonaws.com")
+            self,
+            f"LambdaRole{self.config.APP_CONFIG_ENV_NAME}",
+            assumed_by=ServicePrincipal("lambda.amazonaws.com"),
         )
 
         # allow lambda function to log
@@ -88,20 +90,22 @@ class LambdaStack(Stack):
         )
 
         # aws app config application
-        app_config: CfnApplication = CfnApplication(
-            self, f"ApplicationConfig{self.config.APP_CONFIG_ENV_NAME}", name=f"{self.config.APP_CONFIG_NAME}_{self.config.APP_CONFIG_ENV_NAME}"
+        self.app_config: CfnApplication = CfnApplication(
+            self,
+            f"ApplicationConfig{self.config.APP_CONFIG_ENV_NAME}",
+            name=f"{self.config.APP_CONFIG_NAME}_{self.config.APP_CONFIG_ENV_NAME}",
         )
 
         # aws app config env
-        app_env: CfnEnvironment = CfnEnvironment(
+        self.app_env: CfnEnvironment = CfnEnvironment(
             self,
             f"Environment{self.config.APP_CONFIG_ENV_NAME}",
-            application_id=app_config.attr_application_id,
+            application_id=self.app_config.attr_application_id,
             name=f"{self.config.APP_CONFIG_ENV_NAME}",
         )
 
         # aws app config deployment strategy
-        app_deployment_strategy: CfnDeploymentStrategy = CfnDeploymentStrategy(
+        self.app_deployment_strategy: CfnDeploymentStrategy = CfnDeploymentStrategy(
             self,
             f"AppConfigDeploymentStrategy{self.config.APP_CONFIG_ENV_NAME}",
             deployment_duration_in_minutes=0,
@@ -125,46 +129,22 @@ class LambdaStack(Stack):
             )
         )
 
-        paths: List[Path] = (
-            self.config.schema_paths
-            + [self.config.input_config_path]
-            + [self.config.output_config_path]
-            + [self.config.secrets_config_path]
-            + [self.config.transform_config_path]
-        )
+        # for each schema and config, we create & deploy an aws app config profile
 
-        for path in paths:
-            # for each schema and config (input & output), we create & deploy an aws app config profile
-            json_data: dict = read_json_config(path)
+        schema_paths: List[Path] = self.config.schema_paths
 
-            app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
-                self,
-                f"Profile_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
-                application_id=app_config.attr_application_id,
-                name=path.stem,
-                location_uri="hosted",
-            )
+        for schema_path in schema_paths:
+            self.deploy_app_env(schema_path)
 
-            hosted_configuration_version: CfnHostedConfigurationVersion = (
-                CfnHostedConfigurationVersion(
-                    self,
-                    f"{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
-                    application_id=app_config.attr_application_id,
-                    configuration_profile_id=app_profile.attr_configuration_profile_id,
-                    content=json.dumps(json_data),
-                    content_type="application/json",
-                    latest_version_number=1  # this is very important, otherwise you get 409's
-                )
-            )
-            app_deployment: CfnDeployment = CfnDeployment(  # noqa: F841
-                self,
-                f"Deployment_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
-                application_id=app_config.attr_application_id,
-                configuration_profile_id=app_profile.attr_configuration_profile_id,
-                configuration_version=hosted_configuration_version.ref,
-                deployment_strategy_id=app_deployment_strategy.ref,
-                environment_id=app_env.ref,
-            )
+        config_paths: List[Path] = [
+            self.config.input_config_path,
+            self.config.output_config_path,
+            self.config.secrets_config_path,
+            self.config.transform_config_path,
+        ]
+
+        for config_path in config_paths:
+            self.deploy_app_env(config_path)
 
         # allow lambda function SP to retrieve secrets from the secrets manager
         for secret_name, secret_arn in self.config.secrets_config_data.items():
@@ -187,7 +167,9 @@ class LambdaStack(Stack):
 
             code: DockerImageCode = DockerImageCode.from_ecr(
                 repository=Repository.from_repository_name(
-                    self, f"Repository{self.config.APP_CONFIG_ENV_NAME}", repository_name=docker_image_repo
+                    self,
+                    f"Repository{self.config.APP_CONFIG_ENV_NAME}",
+                    repository_name=docker_image_repo,
                 ),
                 tag_or_digest=docker_image_tag,
             )
@@ -198,8 +180,8 @@ class LambdaStack(Stack):
         environment: dict = (
             {} if self.config.FUNCTION_ENV is None else self.config.FUNCTION_ENV
         )
-        environment["app_config_app_name"] = app_config.name
-        environment["app_config_environment_name"] = app_env.name
+        environment["app_config_app_name"] = self.app_config.name
+        environment["app_config_environment_name"] = self.app_env.name
         environment["app_config_profile_input"] = "input"
         environment["app_config_profile_output"] = "output"
         environment["app_config_secrets"] = "secrets"
@@ -226,7 +208,9 @@ class LambdaStack(Stack):
 
             # get kinesis reference
             kinesis: IStream = Stream.from_stream_arn(
-                self, f"KinesisInputEventSource{self.config.APP_CONFIG_ENV_NAME}", stream_arn=arn_input
+                self,
+                f"KinesisInputEventSource{self.config.APP_CONFIG_ENV_NAME}",
+                stream_arn=arn_input,
             )
 
             # add event source (kinesis)
@@ -242,7 +226,9 @@ class LambdaStack(Stack):
 
             # get kinesis reference
             kinesis: IStream = Stream.from_stream_arn(
-                self, f"KinesisOutputEventSource{self.config.APP_CONFIG_ENV_NAME}", stream_arn=arn_output
+                self,
+                f"KinesisOutputEventSource{self.config.APP_CONFIG_ENV_NAME}",
+                stream_arn=arn_output,
             )
 
             # allow lambda function to put records
@@ -258,3 +244,35 @@ class LambdaStack(Stack):
 
             # no need to do anything permission-wise
             # if the lambda has the master key of the postgresql database
+
+    def deploy_app_env(self, path):
+        json_data: dict = read_json_config(path)
+
+        app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
+            self,
+            f"Profile_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
+            application_id=self.app_config.attr_application_id,
+            name=path.stem,
+            location_uri="hosted",
+        )
+
+        hosted_configuration_version: CfnHostedConfigurationVersion = (
+            CfnHostedConfigurationVersion(
+                self,
+                f"{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
+                application_id=self.app_config.attr_application_id,
+                configuration_profile_id=app_profile.attr_configuration_profile_id,
+                content=json.dumps(json_data),
+                content_type="application/json",
+            )
+        )
+
+        app_deployment: CfnDeployment = CfnDeployment(  # noqa: F841
+            self,
+            f"Deployment_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
+            application_id=self.app_config.attr_application_id,
+            configuration_profile_id=app_profile.attr_configuration_profile_id,
+            configuration_version=hosted_configuration_version.ref,
+            deployment_strategy_id=self.app_deployment_strategy.ref,
+            environment_id=self.app_env.ref,
+        )
