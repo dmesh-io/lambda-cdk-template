@@ -8,7 +8,7 @@ app: App = App()
 
 LambdaStack(
     scope=app,
-    id="LambdaStack",
+    id=f"LambdaStack{config.APP_CONFIG_ENV_NAME}",
     env=Environment(account=config.ACCOUNT_ID, region=config.REGION),
     config=config,
 )

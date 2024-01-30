@@ -63,7 +63,7 @@ class LambdaStack(Stack):
     def _build(self) -> None:
         # create new role for the lambda function
         lambda_role: Role = Role(
-            self, "LambdaRole", assumed_by=ServicePrincipal("lambda.amazonaws.com")
+            self, f"LambdaRole{self.config.APP_CONFIG_ENV_NAME}", assumed_by=ServicePrincipal("lambda.amazonaws.com")
         )
 
         # allow lambda function to log
@@ -89,25 +89,25 @@ class LambdaStack(Stack):
 
         # aws app config application
         app_config: CfnApplication = CfnApplication(
-            self, "ApplicationConfig", name=self.config.APP_CONFIG_NAME
+            self, f"ApplicationConfig{self.config.APP_CONFIG_ENV_NAME}", name=f"{self.config.APP_CONFIG_NAME}_{self.config.APP_CONFIG_ENV_NAME}"
         )
 
         # aws app config env
         app_env: CfnEnvironment = CfnEnvironment(
             self,
-            "Environment",
+            f"Environment{self.config.APP_CONFIG_ENV_NAME}",
             application_id=app_config.attr_application_id,
-            name=self.config.APP_CONFIG_ENV_NAME,
+            name=f"{self.config.APP_CONFIG_ENV_NAME}",
         )
 
         # aws app config deployment strategy
         app_deployment_strategy: CfnDeploymentStrategy = CfnDeploymentStrategy(
             self,
-            "AppConfigDeploymentStrategy",
+            f"AppConfigDeploymentStrategy{self.config.APP_CONFIG_ENV_NAME}",
             deployment_duration_in_minutes=0,
             growth_factor=1.0,
             replicate_to="NONE",
-            name=self.config.APP_CONFIG_DEPLOYMENT_STRATEGY_NAME,
+            name=f"{self.config.APP_CONFIG_DEPLOYMENT_STRATEGY_NAME}_{self.config.APP_CONFIG_ENV_NAME}",
         )
 
         lambda_role.add_to_policy(
@@ -139,7 +139,7 @@ class LambdaStack(Stack):
 
             app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
                 self,
-                f"Profile-{path.stem}",
+                f"Profile_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
                 application_id=app_config.attr_application_id,
                 name=path.stem,
                 location_uri="hosted",
@@ -148,16 +148,17 @@ class LambdaStack(Stack):
             hosted_configuration_version: CfnHostedConfigurationVersion = (
                 CfnHostedConfigurationVersion(
                     self,
-                    path.stem,
+                    f"{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
                     application_id=app_config.attr_application_id,
                     configuration_profile_id=app_profile.attr_configuration_profile_id,
                     content=json.dumps(json_data),
                     content_type="application/json",
+                    latest_version_number=1  # this is very important, otherwise you get 409's
                 )
             )
             app_deployment: CfnDeployment = CfnDeployment(  # noqa: F841
                 self,
-                f"Deployment-{path.stem}",
+                f"Deployment_{self.config.APP_CONFIG_ENV_NAME}_{path.stem}",
                 application_id=app_config.attr_application_id,
                 configuration_profile_id=app_profile.attr_configuration_profile_id,
                 configuration_version=hosted_configuration_version.ref,
@@ -186,7 +187,7 @@ class LambdaStack(Stack):
 
             code: DockerImageCode = DockerImageCode.from_ecr(
                 repository=Repository.from_repository_name(
-                    self, "Repository", repository_name=docker_image_repo
+                    self, f"Repository{self.config.APP_CONFIG_ENV_NAME}", repository_name=docker_image_repo
                 ),
                 tag_or_digest=docker_image_tag,
             )
@@ -207,8 +208,8 @@ class LambdaStack(Stack):
         # create lambda function with docker image
         lambda_function: DockerImageFunction = DockerImageFunction(
             self,
-            "LambdaFunction",
-            function_name=self.config.FUNCTION_NAME,
+            f"LambdaFunction{self.config.APP_CONFIG_ENV_NAME}",
+            function_name=f"{self.config.FUNCTION_NAME}_{self.config.APP_CONFIG_ENV_NAME}",
             code=code,
             architecture=Architecture.X86_64,
             description=self.config.FUNCTION_DESCRIPTION,
@@ -225,7 +226,7 @@ class LambdaStack(Stack):
 
             # get kinesis reference
             kinesis: IStream = Stream.from_stream_arn(
-                self, "KinesisInputEventSource", stream_arn=arn_input
+                self, f"KinesisInputEventSource{self.config.APP_CONFIG_ENV_NAME}", stream_arn=arn_input
             )
 
             # add event source (kinesis)
@@ -241,7 +242,7 @@ class LambdaStack(Stack):
 
             # get kinesis reference
             kinesis: IStream = Stream.from_stream_arn(
-                self, "KinesisOutputEventSource", stream_arn=arn_output
+                self, f"KinesisOutputEventSource{self.config.APP_CONFIG_ENV_NAME}", stream_arn=arn_output
             )
 
             # allow lambda function to put records

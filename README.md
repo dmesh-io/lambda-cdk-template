@@ -13,7 +13,8 @@ Read [lambda_stack.py](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Flambda_stack.py) for
 
 ## Configs
 
-You must provide a config path that contains these files in this directory structure:
+You must provide a config path that contains these files in this directory structure
+OR create an empty configs directory:
 
 ```text
 .
@@ -66,6 +67,44 @@ Available types:
 - `kinesis` - [/configs-kinesis/output.json](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Fconfigs-kinesis%2Foutput.json)
 - `postgresql` - [/configs-postgresql/output.json](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Fconfigs-postgresql%2Fconfigs-kinesis%2Foutput.json)
 
+### schemas(required)
+
+The schema configuration files must in JSON schema format.
+
+Example:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "v1",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "age": {
+      "type": "integer"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    }
+  },
+  "required": [
+    "version",
+    "id",
+    "name"
+  ]
+}
+```
+
+
 ### secrets.json (optional)
 
 Every `key` must match with a name in AWS Secrets Manager.
@@ -80,7 +119,7 @@ The value is the `arn` of the secret.
 ### transform.json (optional)
 
 Every `key` must match with a name (stem) in the `configs/schemas` directory.
-The value must be a JSON string.
+The value must be a JSON string (JMESPath payload).
 
 ```json
 {
@@ -95,7 +134,7 @@ The value must be a JSON string.
 Clone and change to this repository. Execute cookiecutter and follow the input directions.
 
 ```shell
-git clone git@github.com:dmesh-io/cdk-lambda.git
+git clone git@github.com:dmesh-io/lambda-cdk-template.git
 cd cdk-lambda
 cookiecutter .
 ```
@@ -103,7 +142,7 @@ cookiecutter .
 OR do this in one step:
 
 ```shell
-cookiecutter git@github.com:dmesh-io/cdk-lambda.git
+cookiecutter git@github.com:dmesh-io/lambda-cdk-template.git
 ```
 
 ## TODO:

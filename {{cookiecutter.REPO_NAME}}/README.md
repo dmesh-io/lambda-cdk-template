@@ -30,3 +30,9 @@ pip install -r requirements.txt
 ```shell
 cdk deploy
 ```
+
+## Multiple environments
+
+Cookiecutter uses the [.env](.env) file to configure the AWS Lambda Function and all related resources.
+If you want to create another environment,
+change the `APP_CONFIG_ENV_NAME` value and optionally the path to your configurations `CONFIG_PATH`.
