@@ -44,3 +44,6 @@ if __name__ == "__main__":
     if not "{{cookiecutter.DOCKER_IMAGE}}" == "local":
         remove_dir("lambda")
         remove_file("Dockerfile")
+
+    if "{{cookiecutter.CONFIG_PATH}}" != "create":
+        remove_dir("configs")
