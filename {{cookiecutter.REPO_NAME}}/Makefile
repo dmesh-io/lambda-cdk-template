@@ -1,5 +1,10 @@
 SHELL=/bin/bash
 
+STREAM_NAME:=kinesis-johannes-stream
+ECR:=642938752675.dkr.ecr.eu-central-1.amazonaws.com
+ECR_REPO:=aws-test-johannes-julia-private
+REGION:=eu-central-1
+
 #
 # You can use tab for autocomplete on your terminal
 # > make[space][tab]
@@ -12,7 +17,7 @@ help:  ## display this help
 
 ##@ Clean up
 
-clean: ## Clean up module
+clean: ## clean up module
 	@rm -Rf build/
 	@rm -Rf dist/
 	@rm -Rf .coverage
@@ -32,8 +37,11 @@ synth: ## synthesize
 deploy: ## deploy
 	@cdk deploy
 
-invoke-kinesis: ## send a sample test kinesis stream event
-	@aws kinesis put-record --stream-name kinesis-johannes-stream --partition-key 123 --data "SGVsbG8="
+destroy: ## destroy
+	@cdk destroy
+
+invoke-kinesis: ## send a sample test kinesis stream event (input)
+	@aws kinesis put-record --stream-name $(STREAM_NAME) --partition-key 123 --data "SGVsbG8="
 
 ##@ Docker
 
@@ -47,11 +55,10 @@ test: ## test
 	@curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
 
 tag: ## tag
-	@docker tag docker-image:test-aws 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest1
+	@docker tag docker-image:test-aws $(ECR)/$(ECR_REPO):latest
 
 login: ## login to ecr (private)
-	@aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 642938752675.dkr.ecr.eu-central-1.amazonaws.com
+	@aws ecr get-login-password --region $(REGION) | docker login --username AWS --password-stdin $(ECR)
 
 push: ## push
-	@docker push 642938752675.dkr.ecr.eu-central-1.amazonaws.com/aws-test-johannes-julia-private:latest1
-
+	@docker push $(ECR)/$(ECR_REPO):latest

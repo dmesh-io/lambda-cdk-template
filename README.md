@@ -105,3 +105,7 @@ OR do this in one step:
 ```shell
 cookiecutter git@github.com:dmesh-io/cdk-lambda.git
 ```
+
+## TODO:
+
+- [ ] Improve validations in [hooks](hooks)
