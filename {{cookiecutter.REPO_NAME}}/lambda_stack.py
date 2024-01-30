@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from aws_cdk import Duration, Stack
 from aws_cdk.aws_appconfig import (
@@ -133,8 +133,10 @@ class LambdaStack(Stack):
 
         schema_paths: List[Path] = self.config.schema_paths
 
+        dep: Optional[CfnDeployment] = None
+
         for schema_path in schema_paths:
-            self.deploy_app_env(schema_path)
+            dep = self.deploy_app_env(schema_path, dep)
 
         config_paths: List[Path] = [
             self.config.input_config_path,
@@ -143,8 +145,10 @@ class LambdaStack(Stack):
             self.config.transform_config_path,
         ]
 
+        dep: Optional[CfnDeployment] = None
+
         for config_path in config_paths:
-            self.deploy_app_env(config_path)
+            dep = self.deploy_app_env(config_path, dep)
 
         # allow lambda function SP to retrieve secrets from the secrets manager
         for secret_name, secret_arn in self.config.secrets_config_data.items():
@@ -245,7 +249,7 @@ class LambdaStack(Stack):
             # no need to do anything permission-wise
             # if the lambda has the master key of the postgresql database
 
-    def deploy_app_env(self, path):
+    def deploy_app_env(self, path, deployment: Optional[CfnDeployment] = None):
         json_data: dict = read_json_config(path)
 
         app_profile: CfnConfigurationProfile = CfnConfigurationProfile(
@@ -276,3 +280,8 @@ class LambdaStack(Stack):
             deployment_strategy_id=self.app_deployment_strategy.ref,
             environment_id=self.app_env.ref,
         )
+
+        if deployment is not None:
+            app_deployment.add_dependency(deployment)
+
+        return app_deployment
