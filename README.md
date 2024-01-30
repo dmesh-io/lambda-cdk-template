@@ -104,7 +104,6 @@ Example:
 }
 ```
 
-
 ### secrets.json (optional)
 
 Every `key` must match with a name in AWS Secrets Manager.
@@ -144,6 +143,8 @@ OR do this in one step:
 ```shell
 cookiecutter git@github.com:dmesh-io/lambda-cdk-template.git
 ```
+
+![cookiecutter.gif](cookiecutter.gif)
 
 ## TODO:
 
