@@ -28,14 +28,16 @@ from constructs import Construct
 
 class LambdaStack(Stack):
     """
-    Creates an AWS Lambda Function (Docker image) with an event source as input. Default: AWS Kinesis Stream.
+    Creates an AWS Lambda Function (Docker image) with an event source as input.
+    Default: AWS Kinesis Stream.
 
-    A Docker image (Dockerfile) is built and pushed to a private ECR. If the ECR does not exist,
-    it is automatically created.
-    Alternatively, if an ECR image is provided in the config this will be used.
+    A Docker image (Dockerfile) is built and pushed to a private ECR.
+    If the ECR does not exist, it is automatically created.
+    Alternatively, an ECR image can be provided.
 
     The AWS Lambda Function uses AWS AppConfig to retrieve application information.
-    For this to work, you either need to add the AWS AppConfig Agent to the Docker image: https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
+    For this to work, you either need to add the AWS AppConfig Agent to the Docker image:
+    https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-container-image.html
     OR use boto3 in your application code. The latter is used here.
 
     In the context of AWS AppConfig, these actions are performed:
@@ -45,7 +47,9 @@ class LambdaStack(Stack):
     - Creating a deployment strategy
     - Deploying the configuration
 
-    The AWS Lambda Function is given the permission to retrieve provided secrets (ARNs) from the AWS Secrets Manager
+    Every config file is mapped to an AWS AppConfig Profile.
+
+    The AWS Lambda Function is given the permission to retrieve provided secrets (ARNs) from the AWS Secrets Manager.
 
     """
 
@@ -151,7 +155,7 @@ class LambdaStack(Stack):
                     content_type="application/json",
                 )
             )
-            app_deployment: CfnDeployment = CfnDeployment(
+            app_deployment: CfnDeployment = CfnDeployment(  # noqa: F841
                 self,
                 f"Deployment-{path.stem}",
                 application_id=app_config.attr_application_id,
@@ -164,7 +168,7 @@ class LambdaStack(Stack):
         # allow lambda function SP to retrieve secrets from the secrets manager
         for secret_name, secret_arn in self.config.secrets_config_data.items():
             # make sure the secret exists
-            secret_ref: ISecret = Secret.from_secret_complete_arn(
+            secret_ref: ISecret = Secret.from_secret_complete_arn(  # noqa: F841
                 self, secret_name, secret_complete_arn=secret_arn
             )
 
@@ -249,5 +253,7 @@ class LambdaStack(Stack):
                 )
             )
         elif self.config.OUTPUT_TYPE == OutputType.POSTGRESQL:
-            # TODO: implement postgresql
-            ...
+            arn_output: str = self.config.output_config_data["arn"]
+
+            # no need to do anything permission-wise
+            # if the lambda has the master key of the postgresql database

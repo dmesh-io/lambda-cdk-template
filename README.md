@@ -1,7 +1,9 @@
-# Lambda Function Template with AWS CDK
+# Lambda Function AWS CDK Template
 
 This is ready-to-use cookiecutter template to create a project that deploys a serverless AWS Lambda Function (Docker
 Image) with the AWS Cloud Development Kit (CDK).
+
+Read [lambda_stack.py](%7B%7Bcookiecutter.REPO_NAME%7D%7D%2Flambda_stack.py) for a detailed description.
 
 ## Requirements
 
@@ -11,7 +13,7 @@ Image) with the AWS Cloud Development Kit (CDK).
 
 ## Configs
 
-You must provide a config path that contains this directory structure:
+You must provide a config path that contains these files in this directory structure:
 
 ```text
 .
@@ -25,7 +27,13 @@ You must provide a config path that contains this directory structure:
 └── secrets.json
 ```
 
-### input.json
+If you do not want to provide secrets or transform instructions, create an empty JSON file for each:
+
+```json
+{}
+```
+
+### input.json (required)
 
 The `input.json` must contain the keys: `type` and `arn`.
 All other fields are **type-specific**.
@@ -37,7 +45,11 @@ All other fields are **type-specific**.
 }
 ```
 
-### output.json
+Available types:
+
+- `kinesis`
+
+### output.json (required)
 
 The `output.json` must contain the keys: `type` and `arn`.
 All other fields are **type-specific**.
@@ -49,9 +61,12 @@ All other fields are **type-specific**.
 }
 ```
 
-TODO: add type-specific fields
+Available types:
 
-### secrets.json
+- `kinesis`
+- `postgresql`
+
+### secrets.json (optional)
 
 Every `key` must match with a name in AWS Secrets Manager.
 The value is the `arn` of the secret.
@@ -62,7 +77,7 @@ The value is the `arn` of the secret.
 }
 ```
 
-### transform.json
+### transform.json (optional)
 
 Every `key` must match with a name (stem) in the `configs/schemas` directory.
 The value must be a JSON string.
